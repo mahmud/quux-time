@@ -1,0 +1,29 @@
+From: =?ISO-8859-1?Q?Far=E9?= <fahree@[domain-name-of-msg-id-below].com>
+Date: Mon, 26 Oct 2009 16:46:31 -0400
+Message-ID: <653bea160910261346m43ca20e7tc93b4b9d1d491d34@mail.gmail.com>
+Subject: itasoftware.com/quux/time
+To: bigthingist@[domain-name-of-msg-id-above].com
+Content-Type: multipart/mixed; boundary=0016e6d96d204135b60476dca966
+
+--0016e6d96d204135b60476dca966
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+Good opportunity to publish some free software.
+
+Please make the initial commit with unmodified files, so we have an
+easier time tracking changes you make.
+
+Copyright and license are MIT style. You can override any proprietary
+notice in a second commit, and copy the license from XCVB.
+
+The README may or may not be useful. I let you judge how useful it is or is=
+n't.
+
+If you feel this software is no good for your purposes, just don't
+bother publishing it.
+
+Thanks!
+
+[ Fran=E7ois-Ren=E9 =D0VB Rideau | Reflection&Cybernethics | http://fare.tu=
+nes.org ]

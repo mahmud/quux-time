@@ -1,0 +1,140 @@
+
+QReS Timezone Policy
+--------------------
+
+"Time", and its representation in software, has a lot of tricky subtleties.
+If you write any QReS code which involves temporal quantities (and chances
+are good that you will --- it's a reservation system), please adhere to the
+following guidelines.  
+
+Try to use the utilities in "quux/time.lisp" as much as possible.  Avoid
+writing time-manipulation code from scratch, and even avoid adding new
+functionality to time.lisp without review.  (There are things which have
+been purposefully omitted because, although they would seem like handy
+functions, they actually are not.)
+
+  -matto m.
+
+
+Some Guidelines:  UTC or Local time?  A tricky question.
+--------------------------------------------------------
+
+Rule #0A:  Policy or not, all time-related variables (or DB columns) must
+           have names which explicitly declare whether the quantity is
+           'local' or 'UTC', or a 'zoned-time' object.
+
+           How?  Simple; use the suffixes "-local", "-utc" and "-zul":
+
+                                Lisp          SQL
+             o local:        foobar-local   foobar_local
+             o UTC:          foobar-utc     foobar_utc
+             o zoned:        foobar-zul     foobar_zul
+
+
+Rule #0B:  All time-related variables must also have names which explicitly
+           declare whether the quantity is used as just a 'date', just a
+           'tofd' (time-of-day), or a complete 'time' (i.e. date+tofd).
+
+
+Rule #1:  If both the UTC and local-time perspectives are ever relevant for
+          some quantity, then use a 'zoned-time' object, so that the local
+          TZ-offset is stored along with the time.  
+
+          This gives the system a chance of catching and dealing with
+          changes/errors in TZ, and avoids the need to recalculate the
+          TZ every time the quantity is used.
+
+
+Rule #2:  If the UTC perspective is ever relevant, then store UTC in
+          the database.  In other words, 'zoned-time' should be stored
+          as a UTC time and a local time.  (An alternate combination
+          is UTC and TZ-offset, but often it is more useful to be able
+          to perform a SQL query on the local time than on the tz-offset.)
+ 
+          This allows DB operators to make intelligent calculations
+          of physical order and duration.
+
+
+Rule #3:  NEVER use lisp's 'decode-universal-time' or 'encode-universal-time'.
+          (Use quux's 'decode-integer-time', 'encode-integer-time', and their
+           relatives instead.)
+
+
+Rule #4:  ALWAYS supply a timezone of "0" to 'decode-universal-time' 
+          and to 'encode-universal-time'.  (The local TZ of the machine
+          on which the server is running is *never* useful.)
+
+
+Rule #5:  Temporal quantities are opaque.
+          Use the symbolic constants such as "$1hour" or "$24hours" to 
+           generate temporal quantities.
+          Use the functions exported from quux/time.lisp to manipulate,
+           parse, write, compare, etc. times.
+
+
+Rule #6:  Temporal quantities which have physical meaning (e.g. which
+           label the moments at which events occur and/or which will
+           be compared to one another to sort those events) must use
+           UTC.
+
+
+
+A Taxonomy of Time
+------------------
+
+o Time vs Date vs Time-of-Day
+
+     "Time" refers to a fully-specified 'moment'.  A "Time" quantity
+     can be broken into two major components, "Date" and "Time of Day".
+     
+     "Time of Day" is the duration elapsed since the last midnight,
+     typically broken down further into hours, minutes, and seconds.
+
+     "Date" is a kind of a label for the most recent midnight, broken
+     down further into year, month, and day.
+
+
+o Local vs UTC
+
+     A UTC 'time' is a fully-specified moment in the spacetime fabric
+      of the universe (i.e. date + tofd).  It is a real, physical quantity.
+
+     A local 'time' is more or less just a facsimile representation of a
+      bunch of fields (month, day, hour...).  It has dubious physical
+      meaning beyond that.  It is not necessarily meaningful to compare
+      local times from different locales; nor is it always meaningful
+      to compare local times from the *same* locale!
+
+     Local 'tofd' and local 'date' are useful concepts, as they really
+      name subsets of the full set of time components (year, month, day...).
+ 
+     UTC 'tofd' and UTC 'date' are not generally useful by themselves.
+
+
+o Date (and Time) as an Interval
+
+     Although temporal quantities label moments, they typically *mean*
+     intervals.  Temporal intervals are expressed as half-open intervals
+     [m1, m2) between moment m1 and m2.
+
+     A 'time' based in seconds is the interval [s, s+1) from a particular
+     moment s to the next moment, one second later.  Since all seconds
+     are the same duration, 'time' quantities are well-formed in both
+     UTC and local times.  The meanings of 'time' as a moment or an
+     interval are compatible (i.e. specifying any moment s uniquely
+     identifies the s+1 which defines the interval).
+
+     A 'date' based in days is the interval [d, d+1) from a particular
+     midnight moment d to the next, one "day" later.  However, days
+     are not all the same duration; the duration of a day is affected
+     by timezone changes (e.g. daylight saving time).  For this reason:
+
+         o A 'day' is only meaningful when treated as an interval,
+            i.e. both start and end times are required.
+         o A 'day' is an inherently local quantity --- its duration
+            is determined by the timezone rules in effect for a 
+            particular location.
+         o 'UTC date' is meaningless, since timezone transformations
+            cannot guarantee translation of a "UTC day" interval into
+            "local day" interval.
+
